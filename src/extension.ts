@@ -79,7 +79,7 @@ function registerProviders(context: ExtensionContext) {
 function registerProvider(context: ExtensionContext, selector: string, provider: BetterFoldingRangeProvider) {
   setTimeout(() => {
     context.subscriptions.push(languages.registerFoldingRangeProvider(selector, provider));
-  }, 2000);
+  }, 0);
 }
 
 function updateAllDocuments() {
@@ -88,14 +88,14 @@ function updateAllDocuments() {
     providers.forEach(([_, provider]) => provider.updateRanges(e.document));
   }
   //Delayed since vscode does not provide the right visible ranges right away when opening a new document.
-  setTimeout(async () => {
+  setTimeout(() => {
     for (const e of window.visibleTextEditors) {
       providers.forEach(([_, provider]) => provider.updateRanges(e.document));
     }
     FoldedLinesManager.updateAllFoldedLines();
     zenFoldingDecorator.triggerUpdateDecorations();
     foldingDecorator.triggerUpdateDecorations();
-  }, 500);
+  }, 0);
 }
 
 function restart() {

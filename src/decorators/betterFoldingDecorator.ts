@@ -14,7 +14,7 @@ export default abstract class BetterFoldingDecorator extends Disposable {
       this.timeout = setTimeout(() => {
         clearTimeout(this.timeout);
         this.timeout = undefined;
-      }, 100);
+      }, 0);
     }
   }
 
