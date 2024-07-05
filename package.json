@@ -30,7 +30,7 @@
     "brackets",
     "vscode"
   ],
-  "main": "./out/main.js",
+  "main": "./out/extension.js",
   "contributes": {
     "configuration": {
       "title": "Better Folding",
