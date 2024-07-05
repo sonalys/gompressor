@@ -1,4 +1,4 @@
-import { Position, TextDocument } from "vscode";
+import { Position, Range, TextDocument } from "vscode";
 import { BetterFoldingRange } from "../types";
 import * as config from "../configuration";
 import { bracketsToBracketsRanges } from "../utils/functions/utils";
@@ -93,7 +93,12 @@ export class BracketRangesProvider extends BetterFoldingRangeProvider {
     let start = bracketsRange.start.line;
     let end = bracketsRange.end.line - (foldClosingBrackets ? 0 : 1);
     let startColumn = this.getStartColumn(bracketsRange);
+
     let collapsedText = this.getCollapsedText(bracketsRange, document);
+    if (end - start == 2) {
+      let line = document.getText(new Range(start + 1, 0, start + 1, document.lineAt(start + 1).text.length));
+      collapsedText = `{ ${line} }`
+    }
 
     if (showFoldedBrackets) {
       [end, collapsedText] = this.appendPostFoldingRangeText(bracketsRange, collapsedText, document);
