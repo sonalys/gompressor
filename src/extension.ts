@@ -62,7 +62,9 @@ function registerProviders(context: ExtensionContext) {
 }
 
 function registerProvider(context: ExtensionContext, selector: string, provider: BetterFoldingRangeProvider) {
-  context.subscriptions.push(languages.registerFoldingRangeProvider(selector, provider));
+  // Known limitation from VSCode.
+  // We need to override the default language provider.
+  setTimeout(() => context.subscriptions.push(languages.registerFoldingRangeProvider(selector, provider)), 2000);
 }
 
 function updateAllDocuments() {
