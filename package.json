@@ -1,17 +1,17 @@
 {
-  "name": "better-folding",
-  "displayName": "Better Folding",
-  "description": "Improve the folding experience in VS Code",
-  "version": "0.5.1",
+  "name": "gompressor",
+  "displayName": "Gompressor",
+  "description": "Collapses error checking expressions in a single line",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.74.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mtbaqer/vscode-better-folding.git"
+    "url": "https://github.com/sonalys/gompressor.git"
   },
   "icon": "icon_large.png",
-  "publisher": "MohammadBaqer",
+  "publisher": "Sonalys",
   "categories": [
     "Other"
   ],
@@ -19,6 +19,9 @@
     "onStartupFinished"
   ],
   "keywords": [
+    "go",
+    "golang",
+    "error",
     "folding",
     "fold",
     "collapsing",
@@ -40,12 +43,6 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "Include closing brackets like `}` and `]` in the folding range."
-        },
-        "betterFolding.foldClosingTags": {
-          "order": 1,
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Include closing tags like `</div>` and `</p>` in the folding range."
         },
         "betterFolding.showFoldedBodyLinesCount": {
           "order": 2,
@@ -91,16 +88,7 @@
         }
       }
     },
-    "commands": [
-      {
-        "command": "betterFolding.createZenFoldsAroundSelection",
-        "title": "Better Folding: Create Zen Folds Around Selection"
-      },
-      {
-        "command": "betterFolding.clearZenFolds",
-        "title": "Better Folding: Clear Zen Folds"
-      }
-    ]
+    "commands": []
   },
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --minify",

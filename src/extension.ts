@@ -1,26 +1,18 @@
-import { commands, ExtensionContext, languages, window, workspace } from "vscode";
+import { ExtensionContext, languages, window, workspace } from "vscode";
 import { BracketRangesProvider } from "./providers/bracketRangesProvider";
-import { CLEAR_ZEN_FOLDS_COMMAND, CONFIG_ID, CREATE_ZEN_FOLDS_COMMAND } from "./constants";
+import { CONFIG_ID } from "./constants";
 import FoldingDecorator from "./decorators/foldingDecorator";
 import * as config from "./configuration";
-import RegionRangesProvider from "./providers/regionRangesProvider";
-import JsxRangesProvider from "./providers/jsxRangesProvider";
 import FoldedLinesManager from "./utils/classes/foldedLinesManager";
-import ZenFoldingDecorator from "./decorators/zenFoldingDecorator";
 import { ProvidersList } from "./types";
 import BetterFoldingRangeProvider from "./providers/betterFoldingRangeProvider";
 
 const bracketRangesProvider = new BracketRangesProvider();
 const providers: ProvidersList = [
-  ["*", bracketRangesProvider],
-  ["*", new RegionRangesProvider()],
-  ["javascriptreact", new JsxRangesProvider()],
-  ["typescriptreact", new JsxRangesProvider()],
+  ["go", bracketRangesProvider],
 ];
 
 let foldingDecorator = new FoldingDecorator(providers);
-let zenFoldingDecorator = new ZenFoldingDecorator();
-
 const registeredLanguages = new Set<string>();
 
 export function activate(context: ExtensionContext) {
@@ -40,19 +32,14 @@ export function activate(context: ExtensionContext) {
     }),
 
     workspace.onDidChangeTextDocument((e) => {
-      zenFoldingDecorator.onChange(e);
       providers.forEach(([_, provider]) => provider.updateRanges(e.document));
     }),
 
     window.onDidChangeTextEditorVisibleRanges((e) => {
       FoldedLinesManager.updateFoldedLines(e.textEditor);
-      zenFoldingDecorator.triggerUpdateDecorations(e.textEditor);
       foldingDecorator.triggerUpdateDecorations(e.textEditor);
     }),
-
-    commands.registerCommand(CREATE_ZEN_FOLDS_COMMAND, () => zenFoldingDecorator.createZenFoldsAroundSelection()),
-    commands.registerCommand(CLEAR_ZEN_FOLDS_COMMAND, () => zenFoldingDecorator.clearZenFolds())
-  );
+);
 
   registerProviders(context);
   updateAllDocuments();
@@ -74,12 +61,8 @@ function registerProviders(context: ExtensionContext) {
   }
 }
 
-// Courtesy of vscode-explicit-fold,
-// apparently if you delay the folding provider, it can override the default language folding provider.
 function registerProvider(context: ExtensionContext, selector: string, provider: BetterFoldingRangeProvider) {
-  setTimeout(() => {
-    context.subscriptions.push(languages.registerFoldingRangeProvider(selector, provider));
-  }, 0);
+  context.subscriptions.push(languages.registerFoldingRangeProvider(selector, provider));
 }
 
 function updateAllDocuments() {
@@ -87,15 +70,11 @@ function updateAllDocuments() {
   for (const e of window.visibleTextEditors) {
     providers.forEach(([_, provider]) => provider.updateRanges(e.document));
   }
-  //Delayed since vscode does not provide the right visible ranges right away when opening a new document.
-  setTimeout(() => {
-    for (const e of window.visibleTextEditors) {
-      providers.forEach(([_, provider]) => provider.updateRanges(e.document));
-    }
-    FoldedLinesManager.updateAllFoldedLines();
-    zenFoldingDecorator.triggerUpdateDecorations();
-    foldingDecorator.triggerUpdateDecorations();
-  }, 0);
+  for (const e of window.visibleTextEditors) {
+    providers.forEach(([_, provider]) => provider.updateRanges(e.document));
+  }
+  FoldedLinesManager.updateAllFoldedLines();
+  foldingDecorator.triggerUpdateDecorations();
 }
 
 function restart() {
@@ -107,5 +86,4 @@ function restart() {
 
 export function deactivate() {
   foldingDecorator.dispose();
-  zenFoldingDecorator.dispose();
 }

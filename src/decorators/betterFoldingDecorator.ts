@@ -11,10 +11,8 @@ export default abstract class BetterFoldingDecorator extends Disposable {
     if (!this.timeout) {
       this.updateDecorations(editor);
 
-      this.timeout = setTimeout(() => {
-        clearTimeout(this.timeout);
-        this.timeout = undefined;
-      }, 0);
+      clearTimeout(this.timeout);
+      this.timeout = undefined;
     }
   }
 
@@ -39,7 +37,7 @@ export default abstract class BetterFoldingDecorator extends Disposable {
         height: "0",
         contentText,
         color: "grey",
-        margin: `0 -${90}% 0 0`, //Hides the original collapsed text '…'
+        margin: `0 -${100}% 0 0`, //Hides the original collapsed text '…'
         textDecoration: "none; cursor: pointer !important;",
       },
     };

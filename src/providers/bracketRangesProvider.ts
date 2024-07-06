@@ -1,17 +1,19 @@
-import { Position, Range, TextDocument } from "vscode";
+import { Position, Range, TextDocument, window, commands, Selection } from "vscode";
 import { BetterFoldingRange } from "../types";
 import * as config from "../configuration";
-import { bracketsToBracketsRanges } from "../utils/functions/utils";
+import { bracketsToBracketsRanges, foldingRangeToRange } from "../utils/functions/utils";
 import BracketsManager from "../bracket-pair-colorizer-2 src/bracketsManager";
 import BracketsRange from "../utils/classes/bracketsRange";
 import ExtendedMap from "../utils/classes/extendedMap";
 import Token from "../bracket-pair-colorizer-2 src/token";
 import BetterFoldingRangeProvider from "./betterFoldingRangeProvider";
+import foldedLinesManager from "../utils/classes/foldedLinesManager";
 
 type PositionPair = [line: number, column: number];
 
 export class BracketRangesProvider extends BetterFoldingRangeProvider {
   private bracketsManager: BracketsManager = new BracketsManager();
+  private hadFirstRun = false;
 
   private positionToBracketRange: ExtendedMap<PositionPair, BracketsRange | undefined>;
   private positionToFoldingRange: ExtendedMap<PositionPair, BetterFoldingRange | undefined>;
@@ -38,7 +40,28 @@ export class BracketRangesProvider extends BetterFoldingRangeProvider {
     const bracketsRanges = bracketsToBracketsRanges(tokenizedDocument.brackets);
     const foldingRanges = this.bracketsRangesToFoldingRanges(bracketsRanges, tokenizedDocument.tokens, document);
 
+    if (document.languageId !== "go") return foldingRanges;
+    setTimeout(() => {
+      this.autoFold(document, foldingRanges);
+    }, 1000); // Delay this so VSCode has time to process the ranges first.
+    // Lack of folding ranges API makes this necessary.
     return foldingRanges;
+  }
+
+  private autoFold(document : TextDocument, foldingRanges: BetterFoldingRange[]) {
+    if (this.hadFirstRun) return
+    this.hadFirstRun = true;
+    const editor = window.visibleTextEditors.find((editor) => editor.document.uri === document.uri)!;
+    const convertFoldingRange = foldingRangeToRange(document);
+    for (const foldingRange of foldingRanges) {
+      if (!foldingRange.collapsedText?.includes("return")) continue;
+      if (foldedLinesManager.isFolded(convertFoldingRange(foldingRange), editor)) continue;
+      const curSelect = editor?.selection;
+      editor.selection = new Selection(new Position(foldingRange.start, 0), new Position(foldingRange.end, 0));
+      commands.executeCommand("editor.fold");
+      editor.selection = curSelect;
+      foldedLinesManager.setFoldedLines(editor, new Set([foldingRange.start, foldingRange.end]));
+    }
   }
 
   private bracketsRangesToFoldingRanges(
@@ -94,10 +117,12 @@ export class BracketRangesProvider extends BetterFoldingRangeProvider {
     let end = bracketsRange.end.line - (foldClosingBrackets ? 0 : 1);
     let startColumn = this.getStartColumn(bracketsRange);
 
-    let collapsedText = this.getCollapsedText(bracketsRange, document);
+    let collapsedText;
     if (end - start == 2) {
       let line = document.getText(new Range(start + 1, 0, start + 1, document.lineAt(start + 1).text.length));
       collapsedText = `{ ${line} }`
+    } else {
+      collapsedText = this.getCollapsedText(bracketsRange, document)
     }
 
     if (showFoldedBrackets) {

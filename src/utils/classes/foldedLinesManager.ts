@@ -77,7 +77,7 @@ class FoldedLinesManager {
     return this.cachedFoldedLines.get(editor.document.uri);
   }
 
-  private setFoldedLines(editor: TextEditor, lines: Set<number>) {
+  public setFoldedLines(editor: TextEditor, lines: Set<number>) {
     this.cachedFoldedLines.set(editor.document.uri, lines);
   }
 }
